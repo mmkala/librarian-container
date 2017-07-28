@@ -1,0 +1,84 @@
+#!/bin/bash
+#A script designed to write a .ini file for book_register.py, and finally run librarian.py
+
+echo "Welcome to the Librarian container for FAME!"
+echo "Do you have a config file and .db file all set up? (y/n)"
+read answer
+
+
+function writeFile {
+	echo "Name of .ini config file:"
+	read name_of_file
+	echo "Enter number of nodes:"
+	read nodes
+	echo "Enter book size bytes:"
+	read book_size
+	echo "Enter nvm size for each node:"
+	read size
+	touch "$name_of_file"
+	echo "[global]" >> "$name_of_file" 
+	echo "node_count = $nodes" >> "$name_of_file"
+	echo "book_size_bytes = $book_size" >> "$name_of_file"
+	echo "nvm_size_per_node = $size" >> "$name_of_file"
+
+	echo "New .db file to create:"
+	read db_file
+
+	echo "Running Librarian"
+	tm-librarian/./book_register.py -d tm-librarian/"$db_file" "$name_of_file"
+	tm-librarian/./librarian.py --db_file tm-librarian/"$db_file"
+}
+
+function findFile {
+	echo "Please enter your config file:"
+	read name_of_file
+	echo "Please enter your .db file:"
+	read db_file
+	if [ -e "$name_of_file" ]; then 
+		if [ -e tm-librarian/"$db_file" ]; then
+			echo "Running Librarian"
+			tm-librarian/./librarian.py --db_file tm-librarian/"$db_file"
+			exit
+		else
+			echo "Running Librarian"
+			tm-librarian/./book_register.py -d tm-librarian/"$db_file" "$name_of_file"
+			tm-librarian/./librarian.py --db_file tm-librarian/"$db_file"
+			exit
+		fi
+	fi
+
+}
+
+if [ "$answer" == "y" ]; then
+	echo "Awesome!"
+	echo "Please enter your config file:"
+	read name_of_file
+	echo "Please enter your .db file:"
+	read db_file
+	if [ -e "$name_of_file" ]; then 
+		if [ -e tm-librarian/"$db_file" ]; then
+			echo "Running Librarian"
+			tm-librarian/./librarian.py --db_file tm-librarian/"$db_file"
+			exit
+		else
+			echo "Running Librarian"
+			tm-librarian/./book_register.py -d tm-librarian/"$db_file" "$name_of_file"
+			tm-librarian/./librarian.py --db_file tm-librarian/"$db_file"
+			exit
+		fi
+	else
+		echo "Sorry config file with that name couldn't be found! Would you like to write one? (y/n)"
+		read answer1
+		if [ "$answer1" == "y" ]; then
+			writeFile
+		else
+			echo "Let's see if we can find your files"
+			findFile
+			echo "We couldn't find it! Let's write one!"
+			writeFile
+		fi
+	fi
+else
+	writeFile
+fi
+
